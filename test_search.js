@@ -3,8 +3,9 @@
  */
 
 var get_artist_url = "http://api.bandsintown.com/artists/";
-var get_events_by_artist_url = "";
-var app_id = "?api_version=2.0&app_id=YOUR_APP_ID";
+var get_artist_id_url = "https://api.spotify.com/v1/search?query=";
+var get_related_artists_url = "https://api.spotify.com/v1/artists/";
+
 
 
 function getArtistData() {
@@ -13,6 +14,7 @@ function getArtistData() {
 
     var param = document.getElementById("query").value;
     $("#concert-container").empty();
+    $("#related-container").empty();
 
     $.ajax({
         url: get_artist_url+param+".json?api_version=2.0&app_id=1518664261769373",
@@ -31,8 +33,6 @@ function getArtistData() {
 
         // Work with the response
         success: function( response ) {
-            console.log( response ); // server response
-
             if(response.hasOwnProperty('errors')&&response.errors[0]=="Unknown Artist"){
                 $("#artist-name").html("artist not found");
                 $("#artist-fb-link").html("try another one!");
@@ -53,6 +53,7 @@ function getArtistData() {
         }
     });
     getNextConcerts(param);
+    getArtistId(param);
     return false;
 }
 
@@ -75,14 +76,10 @@ function getNextConcerts(artistName){
 
         // Work with the response
         success: function( response ) {
-            console.log( response ); // server response
             $("#concert-container").append("<h3>Next shows:</h3>");
 
             if (typeof response !== 'undefined' && response.length > 0) {
-                for (var i = 0; i < 4; i++) {
-                    if (i == response.lenght) {
-                        break;
-                    }
+                for (var i = 0; i < 4 && i<response.length; i++) {
                     var event = response[i];
                     var event_title = event.title;
                     var event_date = event.formatted_datetime;
@@ -99,5 +96,25 @@ function getNextConcerts(artistName){
     });
 
     return false;
+}
 
+function getArtistId(artistName){
+    $.getJSON( get_artist_id_url+artistName+"&offset=0&limit=20&type=artist", function( data ) {
+        if(data.artists.items.length>0) {
+            var artist_id = data.artists.items[0].id;
+            getRelatedArtists(artist_id);
+        }
+    });
+}
+
+function getRelatedArtists(artistId) {
+    $.getJSON( get_related_artists_url+artistId+"/related-artists", function( data ) {
+        if(data.artists.length>0) {
+            $("#related-container").append('<h3>Related:</h3>');
+            for(var i=0; i<4&&i<data.artists.length; i++) {
+                var artist = data.artists[i];
+                $("#related-container").append('<div class="item related-item"><img src="'+artist.images[0].url+'"><h5>'+artist.name+'</h5></div>')
+            }
+        }
+    });
 }

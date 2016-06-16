@@ -45,6 +45,10 @@ body {
     animation: spin 1s infinite linear;
 }
 
+#related-container { text-align: center;}
+.related-item { width: 96px; display: inline; margin: 8px 0;}
+.related-item img { height: 96px;}
+
 
 @-webkit-keyframes spin {
     0% {
